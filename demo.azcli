@@ -6,3 +6,12 @@ for b in $blobs ; do
   let "i++"
 done
 
+# Get files with TOR Browser
+# https://magpurviewadcblob.blob.core.windows.net/starter1/2018/6/10/Contoso_CreditLimit_17.ssv
+
+j=0
+for b in blobs; do 
+  uri=https://magpurviewadcblob.blob.core.windows.net/starter1/$b
+  ./start-tor-browser.desktop $uri
+done
+
