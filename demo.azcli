@@ -1,0 +1,8 @@
+blobs=$(az storage blob list -c starter2 --query "[].{name:name}" --output tsv --connection-string $AZURE_STORAGE_CONNECTION_STRING)
+
+i=0
+for b in $blobs ; do
+  az storage blob download -c starter2 -n $b -f $i --connection-string $AZURE_STORAGE_CONNECTION_STRING
+  let "i++"
+done
+
