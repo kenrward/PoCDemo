@@ -5,31 +5,29 @@ for c in $containers ; do
 
   i=0
   for b in $blobs ; do
-    az storage blob download -c $c -n $b -f $i --connection-string $AZURE_STORAGE_CONNECTION_STRING
-    torify az storage blob download -c $c -n $b -f $i --connection-string $AZURE_STORAGE_CONNECTION_STRING
+    echo az storage blob download -c $c -n $b -f $i --connection-string $AZURE_STORAGE_CONNECTION_STRING
+    echo torify az storage blob download -c $c -n $b -f $i --connection-string $AZURE_STORAGE_CONNECTION_STRING
     let "i++"
   done
-
+  echo "Done First Block"
 done
 
-unset containers
-unset c
-unset b
-unset i
+containers2=$(az storage container list --query "[].{name:name}" --output tsv  --connection-string $AZURE_STORAGE_CONNECTION_STRING2)
 
-containers=$(az storage container list --query "[].{name:name}" --output tsv  --connection-string $AZURE_STORAGE_CONNECTION_STRING2)
+echo "Starting Second Block"
 
-for c in $containers ; do
-  blobs=$(az storage blob list -c $c --query "[].{name:name}" --output tsv --connection-string $AZURE_STORAGE_CONNECTION_STRING2)
+for c2 in $containers2 ; do
+  blobs2=$(az storage blob list -c $c2 --query "[].{name:name}" --output tsv --connection-string $AZURE_STORAGE_CONNECTION_STRING2)
 
-  i=0
-  for b in $blobs ; do
-    az storage blob download -c $c -n $b -f $i --connection-string $AZURE_STORAGE_CONNECTION_STRING2
-    torify az storage blob download -c $c -n $b -f $i --connection-string $AZURE_STORAGE_CONNECTION_STRING2
+  i2=0
+  for b2 in $blobs2 ; do
+    echo az storage blob download -c $c2 -n $b2 -f $i2 --connection-string $AZURE_STORAGE_CONNECTION_STRING2
+    echo torify az storage blob download -c $c2 -n $b2 -f $i2 --connection-string $AZURE_STORAGE_CONNECTION_STRING2
     let "i++"
   done
-
+  echo "Done Second Block"
 done
+
 
 
 
