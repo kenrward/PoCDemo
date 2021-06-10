@@ -6,14 +6,26 @@ for c in $containers ; do
   i=0
   for b in $blobs ; do
     az storage blob download -c $c -n $b -f $i --connection-string $AZURE_STORAGE_CONNECTION_STRING
+    torify az storage blob download -c $c -n $b -f $i --connection-string $AZURE_STORAGE_CONNECTION_STRING
     let "i++"
   done
 
-  # Get files through TOR
-  # https://justhackerthings.com/post/using-tor-from-the-command-line/
+done
 
-  for b in blobs; do 
-    torify az storage blob download -c $c -n $b -f $i --connection-string $AZURE_STORAGE_CONNECTION_STRING
+unset containers
+unset c
+unset b
+unset i
+
+containers=$(az storage container list --query "[].{name:name}" --output tsv  --connection-string $AZURE_STORAGE_CONNECTION_STRING2)
+
+for c in $containers ; do
+  blobs=$(az storage blob list -c $c --query "[].{name:name}" --output tsv --connection-string $AZURE_STORAGE_CONNECTION_STRING2)
+
+  i=0
+  for b in $blobs ; do
+    az storage blob download -c $c -n $b -f $i --connection-string $AZURE_STORAGE_CONNECTION_STRING2
+    torify az storage blob download -c $c -n $b -f $i --connection-string $AZURE_STORAGE_CONNECTION_STRING2
     let "i++"
   done
 
