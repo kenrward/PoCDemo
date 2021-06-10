@@ -1,17 +1,23 @@
-blobs=$(az storage blob list -c starter2 --query "[].{name:name}" --output tsv --connection-string $AZURE_STORAGE_CONNECTION_STRING)
+containers=$(az storage container list --query "[].{name:name}" --output tsv  --connection-string $AZURE_STORAGE_CONNECTION_STRING)
 
-i=0
-for b in $blobs ; do
-  az storage blob download -c starter2 -n $b -f $i --connection-string $AZURE_STORAGE_CONNECTION_STRING
-  let "i++"
+for c in $containers ; do
+  blobs=$(az storage blob list -c $c --query "[].{name:name}" --output tsv --connection-string $AZURE_STORAGE_CONNECTION_STRING)
+
+  i=0
+  for b in $blobs ; do
+    az storage blob download -c $c -n $b -f $i --connection-string $AZURE_STORAGE_CONNECTION_STRING
+    let "i++"
+  done
+
+  # Get files through TOR
+  # https://justhackerthings.com/post/using-tor-from-the-command-line/
+
+  for b in blobs; do 
+    torify az storage blob download -c $c -n $b -f $i --connection-string $AZURE_STORAGE_CONNECTION_STRING
+    let "i++"
+  done
+
 done
 
-# Get files with TOR Browser
-# https://magpurviewadcblob.blob.core.windows.net/starter1/2018/6/10/Contoso_CreditLimit_17.ssv
 
-j=0
-for b in $blobs; do 
-  uri=https://magpurviewadcblob.blob.core.windows.net/starter1/$b
-  ./start-tor-browser.desktop $uri
-done
 
