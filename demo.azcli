@@ -1,40 +1,28 @@
+acct="magpurviewadcblob"
 
+# Get all containers in str account
 containers=$(az storage container list --query "[].{name:name}" --output tsv  --connection-string $AZURE_STORAGE_CONNECTION_STRING)
 
+#Loop through all containers
 for c in $containers ; do
-  blobs=$(az storage blob list -c $c --query "[].{name:name}" --output tsv --connection-string $AZURE_STORAGE_CONNECTION_STRING)
-
-  i=0
-  for b in $blobs ; do
-    #unauthenticated
-    az storage blob download -c $c -n $b -f $i --connection-string $AZURE_STORAGE_CONNECTION_STRING
-    torify az storage blob download -c $c -n $b -f $i --connection-string $AZURE_STORAGE_CONNECTION_STRING
-    
-    #authenticated
-    az storage blob download -c $c -n $b -f $i --account-name <name> --auth-type login
-    torify az storage blob download -c $c -n $b -f $i --account-name <name> --auth-type login
-    let "i++"
-  done
-  # echo "Done First Block"
+    #Get all blobs
+    blobs=$(az storage blob list -c $c --query "[].{name:name}" --output tsv --connection-string $AZURE_STORAGE_CONNECTION_STRING)
+        for b in $blobs ; do
+            az storage blob download -c $c -n $b -f ${b////-} --connection-string $AZURE_STORAGE_CONNECTION_STRING
+            az storage blob download -c $c -n $b -f ${b////-}  --account-name $acct --auth-mode login
+            torify az storage blob download -c $c -n $b -f ${b////-}  --connection-string $AZURE_STORAGE_CONNECTION_STRING
+            wget https://$acct.blob.core.windows.net/$c/$b
+        done
 done
 
+acct="magpurviewadcadls"
 containers2=$(az storage fs list --query "[].{name:name}" --output tsv  --connection-string $AZURE_STORAGE_CONNECTION_STRING2)
 
-# echo "Starting Second Block"
-
 for c2 in $containers2 ; do
-  files=$(az storage fs file list -f $c2 --exclude-dir --query "[].{name:name}" --output tsv --connection-string $AZURE_STORAGE_CONNECTION_STRING2)
-
-  i2=0
-  for file in $files ; do
-    echo $file
-    az storage fs file download -f $c2 -p $file --connection-string $AZURE_STORAGE_CONNECTION_STRING2
-    torify az storage fs file download -f $c2 -p $file --connection-string $AZURE_STORAGE_CONNECTION_STRING2
-    let "i++"
-  done
-  # echo "Done Second Block"
+    files=$(az storage fs file list -f $c2 --exclude-dir --query "[].{name:name}" --output tsv --connection-string $AZURE_STORAGE_CONNECTION_STRING2)
+        for file in $files ; do
+            az storage fs file download -f $c2 -p $file --connection-string $AZURE_STORAGE_CONNECTION_STRING2
+            az storage fs file download -f $c2 -p $file --account-name $acct --auth-mode login
+            torify az storage fs file download -f $c2 -p $file --connection-string $AZURE_STORAGE_CONNECTION_STRING2
+        done
 done
-
-
-
-
