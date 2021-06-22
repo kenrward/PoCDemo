@@ -1,4 +1,18 @@
-acct="magpurviewadcblob"
+# This script is based off of the Azure Purview Starter Kit which:
+#     Creates an Azure Blob storage account and populates the account with data.
+#     Creates an Azure Data Lake Storage Gen2 account.
+#     https://docs.microsoft.com/en-us/azure/purview/tutorial-scan-data
+#
+# It also requires an Ubuntu VM running the Azure CLI and Tor. Install instructions:
+#     $ sudo apt-get update && sudo apt-get install tor -qqy
+#     $ curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+
+
+export AZURE_STORAGE_CONNECTION_STRING="<ENTERYOURS>"
+export AZURE_STORAGE_CONNECTION_STRING2="<ENTERYOURS>"
+
+#Enter the name of your blob account
+acct="demoadcblob"
 
 # Get all containers in str account
 containers=$(az storage container list --query "[].{name:name}" --output tsv  --connection-string $AZURE_STORAGE_CONNECTION_STRING)
@@ -10,12 +24,18 @@ for c in $containers ; do
         for b in $blobs ; do
             az storage blob download -c $c -n $b -f ${b////-} --connection-string $AZURE_STORAGE_CONNECTION_STRING
             az storage blob download -c $c -n $b -f ${b////-}  --account-name $acct --auth-mode login
-            torify az storage blob download -c $c -n $b -f ${b////-}  --connection-string $AZURE_STORAGE_CONNECTION_STRING
             wget https://$acct.blob.core.windows.net/$c/$b
+            torify az storage blob download -c $c -n $b -f ${b////-}  --connection-string $AZURE_STORAGE_CONNECTION_STRING
+            torify az storage blob download -c $c -n $b -f ${b////-}  --account-name $acct --auth-mode login
+            # Clean up downloaded files
+            rm ${b////-}
+            torify wget https://$acct.blob.core.windows.net/$c/$b
+            # Clean up downloaded files
+            rm $b
         done
 done
 
-acct="magpurviewadcadls"
+acct="demoadcadls"
 containers2=$(az storage fs list --query "[].{name:name}" --output tsv  --connection-string $AZURE_STORAGE_CONNECTION_STRING2)
 
 for c2 in $containers2 ; do
@@ -24,5 +44,8 @@ for c2 in $containers2 ; do
             az storage fs file download -f $c2 -p $file --connection-string $AZURE_STORAGE_CONNECTION_STRING2
             az storage fs file download -f $c2 -p $file --account-name $acct --auth-mode login
             torify az storage fs file download -f $c2 -p $file --connection-string $AZURE_STORAGE_CONNECTION_STRING2
+            torify az storage fs file download -f $c2 -p $file --account-name $acct --auth-mode login
+            # Clean up downloaded files
+            rm $file
         done
 done
