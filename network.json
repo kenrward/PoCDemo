@@ -1,0 +1,143 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.4.412.5873",
+      "templateHash": "8167181203553413871"
+    }
+  },
+  "parameters": {
+    "vnetPrefix": {
+      "type": "string",
+      "defaultValue": "10.0.0.0/16",
+      "metadata": {
+        "description": "VNet network range"
+      }
+    },
+    "subnetPrefix": {
+      "type": "string",
+      "defaultValue": "10.0.0.0/24",
+      "metadata": {
+        "description": "VM subnet"
+      }
+    },
+    "bastionPrefix": {
+      "type": "string",
+      "defaultValue": "10.0.1.0/24",
+      "metadata": {
+        "description": "Bastion Subnet"
+      }
+    },
+    "firewallPrefix": {
+      "type": "string",
+      "defaultValue": "10.0.2.0/24",
+      "metadata": {
+        "description": "Firewall Subnet"
+      }
+    },
+    "adxPrefix": {
+      "type": "string",
+      "defaultValue": "10.0.3.0/24",
+      "metadata": {
+        "description": "ADX Subnet"
+      }
+    }
+  },
+  "functions": [],
+  "variables": {
+    "subnetName": "snet-sandbox",
+    "virtualNetworkName_var": "vnet-sandbox"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Network/virtualNetworks",
+      "apiVersion": "2021-02-01",
+      "name": "[variables('virtualNetworkName_var')]",
+      "location": "[resourceGroup().location]",
+      "tags": {
+        "displayName": "VirtualNetwork"
+      },
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "[parameters('vnetPrefix')]"
+          ]
+        },
+        "subnets": [
+          {
+            "name": "[variables('subnetName')]",
+            "properties": {
+              "addressPrefix": "[parameters('subnetPrefix')]",
+              "serviceEndpoints": [
+                {
+                  "service": "Microsoft.AzureCosmosDB"
+                },
+                {
+                  "service": "Microsoft.CognitiveServices"
+                },
+                {
+                  "service": "Microsoft.ContainerRegistry"
+                },
+                {
+                  "service": "Microsoft.EventHub"
+                },
+                {
+                  "service": "Microsoft.KeyVault"
+                },
+                {
+                  "service": "Microsoft.ServiceBus"
+                },
+                {
+                  "service": "Microsoft.Sql"
+                },
+                {
+                  "service": "Microsoft.Storage"
+                },
+                {
+                  "service": "Microsoft.Web"
+                },
+                {
+                  "service": "Microsoft.AzureActiveDirectory"
+                }
+              ]
+            }
+          },
+          {
+            "name": "AzureFirewallSubnet",
+            "properties": {
+              "addressPrefix": "[parameters('firewallPrefix')]"
+            }
+          },
+          {
+            "name": "ADXSubnet",
+            "properties": {
+              "addressPrefix": "[parameters('adxPrefix')]",
+              "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.network/networkSecurityGroups', 'adx-nsg')]"
+              },
+              "routeTable": {
+                "id": "[resourceId('Microsoft.Networking/routeTables', 'userDefinedRouteTable')]"
+              },
+              "delegations": [
+                {
+                  "name": "AzureDataExplorer",
+                  "properties": {
+                    "serviceName": "Microsoft.Kusto/clusters"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "name": "AzureBastionSubnet",
+            "properties": {
+              "addressPrefix": "[parameters('bastionPrefix')]"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
